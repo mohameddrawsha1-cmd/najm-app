@@ -27,9 +27,31 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Apply build compatibility fixes
+      - name: Configure Android notifications
         run: |
-          sed -i 's/Colors\.white45/Colors.white54/g' lib/main.dart
+          python3 - <<'PY'
+          from pathlib import Path
+
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text()
+          if 'android.permission.POST_NOTIFICATIONS' not in text:
+              marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+              text = text.replace(marker, marker + '\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>')
+          text = text.replace('android:label="najm"', 'android:label="نجم"')
+          if 'ScheduledNotificationReceiver' not in text:
+              receivers = '''\n        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />\n        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">\n            <intent-filter>\n                <action android:name="android.intent.action.BOOT_COMPLETED"/>\n                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>\n                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>\n                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>\n            </intent-filter>\n        </receiver>\n'''
+              text = text.replace('    </application>', receivers + '    </application>')
+          manifest.write_text(text)
+
+          gradle = Path('android/app/build.gradle.kts')
+          g = gradle.read_text()
+          if 'isCoreLibraryDesugaringEnabled' not in g:
+              g = g.replace('compileOptions {', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true')
+          g = g.replace('minSdk = flutter.minSdkVersion', 'minSdk = 23')
+          if 'desugar_jdk_libs' not in g:
+              g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
+          gradle.write_text(g)
+          PY
           rm -f test/widget_test.dart
           rm -f analysis_options.yaml
 
@@ -45,7 +67,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NAJM-Android-APK
+          name: NAJM-v2-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
