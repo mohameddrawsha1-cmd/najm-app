@@ -1,7 +1,7 @@
 name: najm
-description: "نَجْم | NAJM - رفيقك الشخصي للإنجاز"
+description: "نجم - رفيقك الذكي لتحقيق الأهداف وبناء العادات"
 publish_to: "none"
-version: 1.0.0+1
+version: 2.0.0+2
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.3
+  flutter_local_notifications: ^19.4.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:
