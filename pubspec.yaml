@@ -1,7 +1,7 @@
 name: najm
-description: "نجم - رفيقك الذكي لتحقيق الأهداف وبناء العادات"
+description: "نجم - نظام شخصي لتحقيق الأحلام والأهداف وبناء العادات"
 publish_to: "none"
-version: 2.0.0+2
+version: 3.0.0+3
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
