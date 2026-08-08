@@ -27,10 +27,12 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Configure Android notifications and source fixes
+      - name: Configure Android notifications source and icon
         run: |
+          python3 -m pip install --quiet --user pillow
           python3 - <<'PY'
           from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
 
           main = Path('lib/main.dart')
           s = main.read_text()
@@ -57,6 +59,31 @@ jobs:
           if 'desugar_jdk_libs' not in g:
               g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
           gradle.write_text(g)
+
+          sizes = {
+              'mipmap-mdpi': 48,
+              'mipmap-hdpi': 72,
+              'mipmap-xhdpi': 96,
+              'mipmap-xxhdpi': 144,
+              'mipmap-xxxhdpi': 192,
+          }
+          font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+          for folder, size in sizes.items():
+              img = Image.new('RGB', (size, size), '#05070A')
+              d = ImageDraw.Draw(img)
+              pad = max(3, size // 14)
+              d.ellipse((pad, pad, size-pad, size-pad), fill='#11151B', outline='#E8B84E', width=max(2, size//24))
+              font = ImageFont.truetype(font_path, max(12, int(size * 0.26)))
+              try:
+                  box = d.textbbox((0, 0), 'نجم', font=font, direction='rtl', language='ar')
+                  tw, th = box[2]-box[0], box[3]-box[1]
+                  d.text(((size-tw)/2, (size-th)/2 - box[1]), 'نجم', font=font, fill='#FFD978', direction='rtl', language='ar')
+              except Exception:
+                  box = d.textbbox((0, 0), 'نجم', font=font)
+                  tw, th = box[2]-box[0], box[3]-box[1]
+                  d.text(((size-tw)/2, (size-th)/2 - box[1]), 'نجم', font=font, fill='#FFD978')
+              out = Path('android/app/src/main/res') / folder / 'ic_launcher.png'
+              img.save(out)
           PY
           rm -f test/widget_test.dart
           rm -f analysis_options.yaml
