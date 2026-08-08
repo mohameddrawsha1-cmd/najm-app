@@ -27,10 +27,16 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Configure Android notifications
+      - name: Configure Android notifications and source fixes
         run: |
           python3 - <<'PY'
           from pathlib import Path
+
+          main = Path('lib/main.dart')
+          s = main.read_text()
+          s = s.replace('owner!.', 'owner.')
+          s = s.replace('    ))));\n  }\n\n  Future<void> _focusComplete()', '    )));\n  }\n\n  Future<void> _focusComplete()')
+          main.write_text(s)
 
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
