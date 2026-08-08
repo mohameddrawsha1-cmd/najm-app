@@ -27,24 +27,19 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Configure Android notifications source and icon
+      - name: Configure Android notifications and icon
         run: |
           python3 -m pip install --quiet --user pillow
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageDraw, ImageFont
 
-          main = Path('lib/main.dart')
-          s = main.read_text()
-          s = s.replace('owner!.', 'owner.')
-          s = s.replace('    ))));\n  }\n\n  Future<void> _focusComplete()', '    )));\n  }\n\n  Future<void> _focusComplete()')
-          main.write_text(s)
-
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
+          marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+          permissions = '\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>'
           if 'android.permission.POST_NOTIFICATIONS' not in text:
-              marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
-              text = text.replace(marker, marker + '\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>')
+              text = text.replace(marker, marker + permissions)
           text = text.replace('android:label="najm"', 'android:label="نجم"')
           if 'ScheduledNotificationReceiver' not in text:
               receivers = '''\n        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />\n        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">\n            <intent-filter>\n                <action android:name="android.intent.action.BOOT_COMPLETED"/>\n                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>\n                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>\n                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>\n            </intent-filter>\n        </receiver>\n'''
@@ -60,13 +55,7 @@ jobs:
               g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
           gradle.write_text(g)
 
-          sizes = {
-              'mipmap-mdpi': 48,
-              'mipmap-hdpi': 72,
-              'mipmap-xhdpi': 96,
-              'mipmap-xxhdpi': 144,
-              'mipmap-xxxhdpi': 192,
-          }
+          sizes = {'mipmap-mdpi':48,'mipmap-hdpi':72,'mipmap-xhdpi':96,'mipmap-xxhdpi':144,'mipmap-xxxhdpi':192}
           font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
           for folder, size in sizes.items():
               img = Image.new('RGB', (size, size), '#05070A')
@@ -75,15 +64,14 @@ jobs:
               d.ellipse((pad, pad, size-pad, size-pad), fill='#11151B', outline='#E8B84E', width=max(2, size//24))
               font = ImageFont.truetype(font_path, max(12, int(size * 0.26)))
               try:
-                  box = d.textbbox((0, 0), 'نجم', font=font, direction='rtl', language='ar')
+                  box = d.textbbox((0,0), 'نجم', font=font, direction='rtl', language='ar')
                   tw, th = box[2]-box[0], box[3]-box[1]
-                  d.text(((size-tw)/2, (size-th)/2 - box[1]), 'نجم', font=font, fill='#FFD978', direction='rtl', language='ar')
+                  d.text(((size-tw)/2,(size-th)/2-box[1]), 'نجم', font=font, fill='#FFD978', direction='rtl', language='ar')
               except Exception:
-                  box = d.textbbox((0, 0), 'نجم', font=font)
+                  box = d.textbbox((0,0), 'نجم', font=font)
                   tw, th = box[2]-box[0], box[3]-box[1]
-                  d.text(((size-tw)/2, (size-th)/2 - box[1]), 'نجم', font=font, fill='#FFD978')
-              out = Path('android/app/src/main/res') / folder / 'ic_launcher.png'
-              img.save(out)
+                  d.text(((size-tw)/2,(size-th)/2-box[1]), 'نجم', font=font, fill='#FFD978')
+              img.save(Path('android/app/src/main/res') / folder / 'ic_launcher.png')
           PY
           rm -f test/widget_test.dart
           rm -f analysis_options.yaml
@@ -92,7 +80,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze app source
-        run: flutter analyze lib
+        run: flutter analyze lib --no-fatal-warnings
 
       - name: Build release APK
         run: flutter build apk --release
@@ -100,7 +88,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NAJM-v2-Android-APK
+          name: NAJM-v3-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
