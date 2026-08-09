@@ -27,12 +27,24 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Configure Android exact notifications and icon
+      - name: Configure Android exact notifications and source fixes
         run: |
           python3 -m pip install --quiet --user pillow
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageDraw, ImageFont
+
+          app = Path('lib/v4_app.dart')
+          s = app.read_text()
+          s = s.replace("GoalItem({required this.id, required this.title, this.why='', this.progress=0, List<String>? steps, List<bool>? done});", "GoalItem({required this.id, required this.title, this.why='', this.progress=0, List<String>? steps, List<bool>? done}) : steps = steps ?? [], done = done ?? [];")
+          s = s.replace("class NajmStateData {\n  String displayName", "class NajmStateData {\n  NajmStateData();\n  String displayName")
+          s = s.replace("ListTile(title:const Text('بدون تذكير'),onTap:()=>Navigator.pop(x,0))]))));", "ListTile(title:const Text('بدون تذكير'),onTap:()=>Navigator.pop(x,0))])))));")
+          s = s.replace("child:const Text('سأتجاوزها الآن'))]))))));}", "child:const Text('سأتجاوزها الآن'))])))));}")
+          app.write_text(s)
+
+          main = Path('lib/main.dart')
+          m = main.read_text().replace("anonKey: 'sb_publishable_pkW2bfGin6YApc1qVDTvsw_FFHi3X_Z'", "publishableKey: 'sb_publishable_pkW2bfGin6YApc1qVDTvsw_FFHi3X_Z'")
+          main.write_text(m)
 
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
