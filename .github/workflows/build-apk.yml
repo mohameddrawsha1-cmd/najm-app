@@ -27,7 +27,7 @@ jobs:
       - name: Create Android scaffold
         run: flutter create --platforms=android --org com.najm --project-name najm .
 
-      - name: Configure Android exact notifications and source fixes
+      - name: Configure Android networking exact notifications and source fixes
         run: |
           python3 -m pip install --quiet --user pillow
           python3 - <<'PY'
@@ -42,14 +42,12 @@ jobs:
           s = s.replace("child:const Text('سأتجاوزها الآن'))]))))));}", "child:const Text('سأتجاوزها الآن'))])))));}")
           app.write_text(s)
 
-          main = Path('lib/main.dart')
-          m = main.read_text().replace("anonKey: 'sb_publishable_pkW2bfGin6YApc1qVDTvsw_FFHi3X_Z'", "publishableKey: 'sb_publishable_pkW2bfGin6YApc1qVDTvsw_FFHi3X_Z'")
-          main.write_text(m)
-
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
           marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
           perms = [
+              'android.permission.INTERNET',
+              'android.permission.ACCESS_NETWORK_STATE',
               'android.permission.POST_NOTIFICATIONS',
               'android.permission.RECEIVE_BOOT_COMPLETED',
               'android.permission.SCHEDULE_EXACT_ALARM',
@@ -106,7 +104,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NAJM-v4-Android-APK
+          name: NAJM-v4.1-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
