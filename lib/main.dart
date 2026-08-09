@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'v4_app.dart';
+import 'v5_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,5 +18,5 @@ Future<void> main() async {
     systemNavigationBarIconBrightness: Brightness.light,
     systemNavigationBarDividerColor: Color(0xFF05070A),
   ));
-  runApp(const NajmV4App());
+  runApp(const NajmV5App());
 }
