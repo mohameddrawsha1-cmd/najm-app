@@ -42,6 +42,12 @@ jobs:
           s = s.replace("child:const Text('سأتجاوزها الآن'))]))))));}", "child:const Text('سأتجاوزها الآن'))])))));}")
           app.write_text(s)
 
+          v5 = Path('lib/v5_app.dart')
+          lines = v5.read_text().splitlines()
+          fixed = "  Future<void> ritual() async {final text=data.dreams.map((d)=>'• ${d.title}${d.scene.isEmpty?'':'\\n${d.scene}'}${d.identity.isEmpty?'':'\\nهويتي: ${d.identity}'}').join('\\n\\n');await showDialog<void>(context:context,builder:(x)=>Directionality(textDirection:TextDirection.rtl,child:AlertDialog(title:const Text('طقس الرؤية — دقيقتان'),content:SingleChildScrollView(child:Text('اقرأ ببطء، تخيّل التفاصيل، ثم اختر فعلاً واحداً لليوم.\\n\\n$text',style:const TextStyle(height:1.55))),actions:[FilledButton(onPressed:(){for(final d in data.dreams)d.readToday=true;changed(8);Navigator.pop(x);},child:const Text('قرأتها وسأتحرك اليوم'))]))); }"
+          lines = [fixed if line.startswith('  Future<void> ritual() async') else line for line in lines]
+          v5.write_text('\n'.join(lines) + '\n')
+
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
           marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
@@ -104,7 +110,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NAJM-v4.1-Android-APK
+          name: NAJM-v5-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
