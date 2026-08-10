@@ -132,8 +132,8 @@ final class Auth
             ->execute([mb_strtolower(trim($email)), $_SERVER['REMOTE_ADDR'] ?? null, (int) $success]);
         if (!$success) {
             $pdo->prepare(
-                'UPDATE users SET failed_login_count = failed_login_count + 1,
-                 locked_until = CASE WHEN failed_login_count + 1 >= 5 THEN DATE_ADD(UTC_TIMESTAMP(), INTERVAL 15 MINUTE) ELSE locked_until END
+                'UPDATE users SET locked_until = CASE WHEN failed_login_count + 1 >= 5 THEN DATE_ADD(UTC_TIMESTAMP(), INTERVAL 15 MINUTE) ELSE locked_until END,
+                 failed_login_count = failed_login_count + 1
                  WHERE email = ?'
             )->execute([mb_strtolower(trim($email))]);
         }
